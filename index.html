@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>My App</title>
+    <meta name="description" content="My App description">
+
+
+    <!-- Load and register pre-caching Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js');
+        });
+      }
+    </script>
+
+    <!-- Load webcomponents-loader.js to check and load any polyfills your browser needs -->
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    
+    
+    <!-- Load your application shell -->
+    <link rel="import" href="/src/my-app.html">
+    
+    
+    <style>
+    
+/*       @media only screen and (min-device-width: 768px) {
+        body {
+          overflow: hidden;
+        }
+      } */
+    </style>
+    
+  </head>
+  
+  <body>
+    <my-app></my-app>
+  </body>
+  
+  <script>
+	  document.onreadystatechange = () => {
+		  if (document.readyState === 'complete') {
+		    // document ready
+		    console.log("DOM rdy");
+		  }
+		};
+	  console.log("index ende");
+	  
+	  // workaround, um den relevanten Code aus dem import heraus in den light dom, anstelle des shadow dom zu laden
+// 	  var link = document.querySelector('link[rel="import"]');
+//     // Clone the <template> in the import
+//     var template = link.import.querySelector('template');
+//     var clone = document.importNode(template.content, true);
+
+//     document.querySelector('my-app').appendChild(clone);
+  </script>
+</html>

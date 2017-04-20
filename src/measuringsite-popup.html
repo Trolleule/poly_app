@@ -1,0 +1,66 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="bootstrap.html">
+
+<dom-module id="measuringsite-popup">
+  <template>
+    <style >
+    </style>
+
+  
+    <div class="popup-container container-fluid">
+      <div class="row">
+        <p><b><a href="[[url]]">[[name]]</a></b></p>
+      </div>
+      <div class="row"><h3>Hier Bild einfügen</h3></div>
+      <div class="row">
+        <i>[[description]]</i><br/>
+      </div>
+      <div class="row">
+        <b>City: </b>[[city]]
+      </div>
+      <div class="row">
+        <b>Voltage: </b>[[voltage]]
+      </div>
+      <div class="row">
+        <b>Data Source: </b>[[data_source]]
+      </div>
+      <div class="row">
+        <b>Last Vehicle</b>[[last_vehicle]]
+      </div>
+      <div class="row">
+        <b>Last Login: </b>[[last_login]]
+      </div>
+    </div>
+  </template>
+
+  <script>
+    class MeasuringsitePopup extends Polymer.Element {
+      
+    	static get is() { return 'measuringsite-popup'; }
+      
+      static get properties() {
+    	  // 14 properties 
+   	    return {
+    		  default_device: Number,
+    		  name: String,
+    		  url: String,
+    		  description: String,
+    		  street_name: String,
+    		  street_number: String,
+    		  street_labeling: String,
+    		  city: String,
+    		  country: String,
+    		  last_voltage: Number,
+    		  last_vehicle: Date,
+    		  data_source: String,
+    		  last_login: Date,
+    		  warnings: Number,
+    		  photos: Object
+   	    };
+      }
+      
+    }
+
+    window.customElements.define(MeasuringsitePopup.is, MeasuringsitePopup);
+  </script>
+</dom-module>

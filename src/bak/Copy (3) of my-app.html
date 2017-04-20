@@ -1,0 +1,176 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="bootstrap4.html">
+
+<dom-bind>
+<template>
+	<div id="main">
+	  <div class="container-fluid">
+	    <div class="row">
+	      <div class="col-md-4">
+	        Text
+	      </div>
+	      <div class="col-md-8">
+	      
+	        <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+	          <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+	                  aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+	            <span class="navbar-toggler-icon"></span>
+	          </button>
+	          <a class="navbar-brand" href="#">Navbar</a>
+	          <div class="collapse navbar-collapse" id="navbarNavDropdown">
+	            <ul class="navbar-nav">
+	              <li class="nav-item active">
+	                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+	              </li>
+	              <li class="nav-item">
+	                <a class="nav-link" href="#">Features</a>
+	              </li>
+	              <li class="nav-item">
+	                <a class="nav-link" href="#">Pricing</a>
+	              </li>
+	              <li class="nav-item dropdown">
+	                <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+	                   aria-expanded="false">
+	                  Dropdown link
+	                </a>
+	                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	                  <a class="dropdown-item" href="#">Action</a>
+	                  <a class="dropdown-item" href="#">Another action</a>
+	                  <a class="dropdown-item" href="#">Something else here</a>
+	                </div>
+	              </li>
+	            </ul>
+	          </div>
+	        </nav>
+	  
+	      </div>
+	    </div>
+	    <div class="row">
+	     <div class="col-md-4">
+	       <div id="map" style="height: 184px;"></div>
+	       <!-- code snippet hat keinen bezug zu polymer's template features, da nicht aufgelöst -->
+	       <div>[[name]]</div>
+	     </div>
+	    </div>
+	  </div>
+	</div>
+</template>
+</dom-bind>
+
+<dom-module id="my-app">
+  <template>
+
+
+    <style>
+      
+    </style>
+
+<!--     include stylesheet for shady dom and shadow dom -->
+<!-- 	  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css">
+	  <link rel="import" type="css" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"> -->
+
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+    <!-- https://www.polymer-project.org/2.0/docs/devguide/shadow-dom -->
+    <!-- http://stackoverflow.com/questions/23818788/polymer-custom-element-styles-with-html-imports/23819523#23819523 -->
+    <slot></slot>
+    
+  </template>
+
+
+
+
+  <script>
+    class MyApp extends Polymer.Element {
+
+      static get is() { return 'my-app'; }
+
+      static get properties() {
+        return {
+        	name: String,
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+        };
+      }
+      
+
+      
+      ready() {
+    	  super.ready();
+    	  console.log("element rdy");
+    	  // When possible, use afterNextRender to defer non-critical
+    	  // work until after first paint.
+    	  Polymer.RenderStatus.afterNextRender(this, function() {
+    	    console.log("render element rdy");
+            
+//           var map = L.map(this.$.map, {
+//             layers: MQ.mapLayer(),
+//             center: [ 40.731701, -73.993411 ],
+//             zoom: 12
+//           });
+          
+//           this.map = map;
+    	  });
+    	}
+      
+      connectedCallback() {
+    	  super.connectedCallback();
+    	  
+    	  console.log("created");
+    	}
+      
+
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
+
+      _routePageChanged(page) {
+        // Polymer 2.0 will call with `undefined` on initialization.
+        // Ignore until we are properly called with a string.
+        if (page === undefined) {
+          return;
+        }
+
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
+        // Close a non-persistent drawer when the page & route are changed.
+//         if (!this.$.drawer.persistent) {
+//           this.$.drawer.close();
+//         }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+</dom-module>
+
+

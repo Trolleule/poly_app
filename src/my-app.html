@@ -1,0 +1,427 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bootstrap.html">
+<link rel="import" href="leaflet.html">
+<link rel="import" href="measuringsite-popup.html">
+
+
+<style>
+
+	  :root {
+      --row-header-height: 15vh;
+	    --row-map-height: 76.5vh;
+	    
+      --row-expanded-header-height: calc(var(--row-navbar-height) + var(--row-header-height));
+	    --row-expanded-map-height: calc(var(--row-navbar-height) + var(--row-map-height));
+	  }
+
+    #navigation-bar {}
+    
+    #footer {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      z-index: 9999; /* to overlay the map */
+      background: -webkit-linear-gradient(left, #183440 , #007377); /* For Safari 5.1 to 6.0 */
+      background: -o-linear-gradient(right, #183440 , #007377); /* For Opera 11.1 to 12.0 */
+      background: -moz-linear-gradient(right, #183440 , #007377); /* For Firefox 3.6 to 15 */
+      background: linear-gradient(to right, #183440 , #007377); /* Standard syntax */
+    }
+
+    .r-block { text-align: right; }
+    
+    .r-block__text {
+      color: white;
+      margin-right: 10px;
+      vertical-align: -webkit-baseline-middle;
+      display: inline-block;
+    }
+    
+    .m-block { text-align: center; }
+    
+    .m-block__text {
+      color: white;
+      vertical-align: -webkit-baseline-middle;
+      display: inline-block;
+    }
+    
+    .l-block { text-align: left; }
+    
+    .l-block__text {
+      color: white;
+      margin-left: 10px;
+      vertical-align: -webkit-baseline-middle;
+      display: inline-block;
+    }
+    
+    #function-panel {
+      height: 15vh;
+      padding: 15px;
+      background: -webkit-linear-gradient(left, #183440 , #007377); /* For Safari 5.1 to 6.0 */
+      background: -o-linear-gradient(right, #183440 , #007377); /* For Opera 11.1 to 12.0 */
+      background: -moz-linear-gradient(right, #183440 , #007377); /* For Firefox 3.6 to 15 */
+      background: linear-gradient(to right, #183440 , #007377); /* Standard syntax */
+    }
+    
+    .expanded-header {
+	    -moz-transition: height 400ms;
+	    -ms-transition: height 400ms;
+	    -o-transition: height 400ms;
+	    -webkit-transition: height 400ms;
+	    transition: height 400ms;
+      height: var(--row-expanded-header-height) !important;
+    }
+
+    .deexpanded-header {
+      -moz-transition: height 400ms;
+      -ms-transition: height 400ms;
+      -o-transition: height 400ms;
+      -webkit-transition: height 400ms;
+      transition: height 400ms;
+      height: var(--row-header-height) !important;
+    }
+    
+    .expanded-map { height: var(--row-expanded-map-height) !important; }
+    
+    #map {
+      height: var(--row-map-height);
+      width: 100%;
+    }
+  
+    .toggler-wrapper {
+      position: absolute;
+      left: 50vw;
+      margin-top: -15px;
+      z-index: 9999;
+      cursor: pointer;
+    }
+    
+    .toggler-btn { cursor: pointer; }
+
+	  #function-panel-wrapper {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+	  }
+	  
+	  #function-panel-wrapper:before {
+		  content:'';
+		  opacity: 0.5;
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      background-color: black;
+      z-index: 9998;
+	  }
+	  
+    .modal-elements {
+			-moz-border-radius: 4px;
+			-webkit-border-radius: 4px;
+			border-radius: 4px;
+			-webkit-box-shadow: 0 4px 6px 0 black;
+			box-shadow: 0 4px 6px 0 black;
+			background-color: #f7f7f7;
+			z-index: 9999;
+			margin: 15px;
+			height: 400px;
+    }
+
+    #function-block {
+	    height: 120px;
+	    width: 120px;
+	    background-color: #f7f7f7;
+	    border-radius: 8px;
+	    padding: 5px;
+    }
+
+    #show-sites {
+      height: 30px;
+      width: 30px;
+      background-color: black;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+
+
+  }    
+</style>
+
+
+
+
+<dom-module id="my-app">
+  <template>
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+
+		<div id="main">
+
+			<nav id="navigation-bar" class="navbar navbar-toggleable-md navbar-light bg-faded">
+			  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			    <span class="navbar-toggler-icon"></span>
+			  </button>
+			  <a class="navbar-brand" href="#">
+			    <img src="http://www.datacollect.com/uploads/media/datacollect_logo.png" width="167" height="32" alt="">
+			  </a>
+			
+			  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+			    <ul class="navbar-nav mr-auto">
+			      <li class="nav-item active">
+			        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+			      </li>
+			      <li class="nav-item">
+			        <a class="nav-link" href="#">Link</a>
+			      </li>
+			      <li class="nav-item">
+			        <a class="nav-link disabled" href="#">Disabled</a>
+			      </li>
+			    </ul>
+			    <ul class="navbar-nav ml-auto mt-2 mt-md-0">
+				    <li class="nav-item">
+		          <form class="form-inline my-2 my-lg-0">
+		            <input class="form-control mr-sm-2" type="text" placeholder="Search">
+		            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+		          </form>
+	          </li>
+			      <li class="nav-item dropdown">
+			        <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			          Sprache wählen
+			        </a>
+			        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+			          <a class="dropdown-item" href="#">Deutsch</a>
+			          <a class="dropdown-item" href="#">Englisch</a>
+			          <a class="dropdown-item" href="#">Spanisch</a>
+			        </div>
+			      </li>
+			      <li class="nav-item">
+			        <a class="nav-link" href="#">Login</a>
+			      </li>
+			    </ul>
+			  </div>
+			</nav>
+	
+		  <div id="navbar-toggler" class="toggler-wrapper">
+		    <button class="toggler-btn" style="height: 15px;"></button>
+		  </div>
+		
+			<div id="function-panel" class="container-fluid">
+			  <div class="row">
+			    <div class="col">
+				    <div id="function-block">
+				      <div id="show-sites"></div>
+				    </div>
+			    </div>
+			    <div class="col">
+			    </div>
+			    <div class="col">
+			    </div>
+			  </div>
+			</div>
+		
+		  <div id="function-panel-toggler" class="toggler-wrapper">
+		    <button class="toggler-btn" style="height: 15px;"></button>
+		  </div>
+		  
+      <!-- Hidden Function Panel begin -->
+      <div id="function-panel-wrapper" style="display: none;">
+        <div id="function-panel">
+          <!-- Content begin -->
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col modal-elements">Funktion 1
+              </div>
+            </div>
+            <div class="row">
+              <div class="col modal-elements">Funktion 2
+              </div>
+            </div>
+            <div class="row">
+              <div class="col modal-elements">Funktion 3
+              </div>
+            </div>
+          </div>
+        <!-- Content end -->
+        </div>
+      </div>
+      <!-- Hidden Function Panel end -->
+	    
+      <div id="content">
+		    <div id="map"></div>
+		  </div>
+		  
+		  <div id="footer" class="container-fluid">
+		    <div class="row">
+		      <div class="col l-block">
+		        <span class="l-block__text">Das ist footer Text</span>
+		      </div>
+		      <div class="col m-block">
+		        <span class="m-block__text">Das ist footer Text</span>
+		      </div>
+		      <div class="col r-block">
+		        <span class="r-block__text">Das ist footer Text</span>
+		      </div>
+		    </div>
+		  </div>
+		
+		
+		</div>
+
+  </template>
+
+  <script>
+  var map = ""
+    class MyApp extends Polymer.Element {
+
+      static get is() { return 'my-app'; }
+
+      static get properties() {
+        return {
+        	name: String,
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+        };
+      }
+      
+      // override method to attach template to itself in shadow dom context, instead only attach to itself
+      // https://github.com/Polymer/polymer/blob/master/lib/mixins/element-mixin.html#L635-L663
+      _attachDom(dom) {
+        this.appendChild(dom);
+      }
+      
+      ready() {
+    	  super.ready();
+    	  console.log("element rdy");
+    	  // When possible, use afterNextRender to defer non-critical
+    	  // work until after first paint.
+    	  Polymer.RenderStatus.afterNextRender(this, function() {
+    	    console.log("render element rdy");
+            
+//           var map = L.map(this.$.map, {
+//             layers: MQ.mapLayer(),
+//             center: [ 40.731701, -73.993411 ],
+//             zoom: 12
+//           });
+          
+          //this.map = map;
+          
+          
+          $("#navbar-toggler").on("click", function() {
+        	  console.log("toggler clicked.");
+        	  if ( $("#navigation-bar").is(":visible") ) $("#header").addClass("expanded-header");
+        	  if ( $("#navigation-bar").is(":hidden") )  $("#header").addClass("deexpanded-header");
+        	  
+        	  $("#navigation-bar").slideToggle({
+        		  start: function() {
+        			  console.log("ani start.");
+        			  //if ( $("#navigation-bar").is(":visible") ) console.log("visible.");      
+        		  },
+        		  complete: function() {
+        			  console.log("ani complete.");
+        			  if ( $("#navigation-bar").is(":visible") ) $("#function-panel").removeClass("expanded-header deexpanded-header");
+        		  }
+        		});
+        	  
+          });
+
+          
+          $("#function-panel-toggler").on("click", function() {
+        	  console.log("toggler clicked.");
+        	  $("#function-panel-wrapper").slideToggle();
+          });
+        	 
+
+          // show map
+          map = L.map('map', {
+            layers: MQ.mapLayer(),
+            center: [ 49.196064000723794,21.093750000000004 ],
+            zoom: 5
+          });
+          
+          
+
+          L.geoJSON(measuringSites, {
+       		  onEachFeature: function(feature, layer) {
+
+       			  
+	            let popup = document.createElement('measuringsite-popup');
+	            popup.url = feature.properties.url;
+	            popup.name = feature.properties.name;
+	            popup.description = feature.properties.description;
+	            popup.city = feature.properties.city;
+	            popup.voltage = (feature.properties.voltage ? feature.properties.voltage : '\u2014');
+	            popup.data_source = feature.properties.data_source;
+	            popup.last_vehicle = (feature.properties.last_vehicle ? feature.properties.last_vehicle : '\u2014');
+	            popup.last_login = (feature.properties.last_login ? feature.properties.last_login : '\u2014');
+	            
+	            
+       		    layer.bindPopup(popup);
+       		  }
+          }).addTo(map);
+
+          
+    	  });
+    	}
+      
+      connectedCallback() {
+    	  super.connectedCallback();
+    	  
+    	  console.log("created");
+    	}
+      
+
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
+
+      _routePageChanged(page) {
+        // Polymer 2.0 will call with `undefined` on initialization.
+        // Ignore until we are properly called with a string.
+        if (page === undefined) {
+          return;
+        }
+
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
+        // Close a non-persistent drawer when the page & route are changed.
+//         if (!this.$.drawer.persistent) {
+//           this.$.drawer.close();
+//         }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+</dom-module>
+
+

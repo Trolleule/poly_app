@@ -1,0 +1,113 @@
+{% extends 'routes/base.html' %}
+{% load i18n object_info sekizai_tags %}
+
+
+{% block head-title %}{{ object.name }}{{ block.super }}{% endblock %}
+{% block breadcrumbs %}{{ block.super}} &rsaquo; {{ object.name }}{% endblock %}
+
+{% block css %}
+                {% addtoblock "css" %}
+                               <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}resources/javascripts/libraries/leaflet/leaflet.css" media="screen" />
+                {% endaddtoblock %}
+{% endblock %}
+
+{% block js %}
+                {% addtoblock "js" %}
+                               <script type="text/javascript" src="{{ STATIC_URL }}resources/javascripts/libraries/leaflet/leaflet.js"></script>
+                               <script src="https://open.mapquestapi.com/sdk/leaflet/v2.2/mq-map.js?key=0cNL1mhMh5uSeoLSrHGucyRJXMY7Ak6H"></script>
+                               <script type="text/javascript">
+                               $(function(){ 
+                                               var siteIconUrl = 'https://api.mqcdn.com/icons/multi-pin-{PIN}.png';
+                                               
+                                               var drawSites = function(map, geojsonData) {
+                                                               var geojsonLayer = L.geoJSON(geojsonData, {
+                                                                              pointToLayer: function (feature, latlng) {
+                                                                                              // get character for marker depending on order of site in the route, e.g. 'A', 'B', ...'Z'
+                                                                                              var markerChar = String.fromCharCode( 96 + feature.properties.route_order );
+                                                                                              // create marker with icon
+                                                                                              return L.marker(latlng, {
+                                                                                                              icon: new L.Icon({
+                                                                                                                             iconUrl: siteIconUrl.replace('{PIN}', markerChar),
+                                                                                                                             iconSize: [36, 35]
+                                                                                                              })
+                                                                                              });
+                                                                              },
+                                                                              onEachFeature: function(feature, layer) {
+                                                                                              var $popupContent = $('<div/>');
+                                                                                              $popupContent.append('<p><b><a href="' + feature.properties.url + '">' + 
+                                                                                                              feature.properties.name + '</a></b></p>');
+                                                                                                              
+                                                                                              var $photos = $('<div/>');
+                                                                                              if(typeof(feature.properties.photos) != 'undefined'){
+                                                                                                              for (i=0; i< feature.properties.photos.length; i++) {
+                                                                                                                             $photos.append('<a href="' + feature.properties.photos[i]['img'] + '" target="_blank""><img src="' + feature.properties.photos[i]['thumb'] + '" width="89" height="89" /></a> ');
+                                                                                                              }
+                                                                                              }
+                                                                                              $popupContent.append($photos);
+                                                                                              
+                                                                                              $popupContent.append('<i>' + feature.properties.description + '</i><br/>');
+                                                                                              $popupContent.append('<b>' + gettext('City') + ': </b>' + feature.properties.city + '<br/>');
+                                                                                              $popupContent.append('<b>' + gettext('Voltage') + ': </b>' + (feature.properties.voltage ? feature.properties.voltage : '&mdash;') + '<br/>');
+                                                                                              $popupContent.append('<b>' + gettext('Data Source') + ': </b>' + feature.properties.data_source + '<br/>');
+                                                                                              $popupContent.append('<b>' + gettext('Last Vehicle') + ': </b>' + (feature.properties.last_vehicle ? feature.properties.last_vehicle : '&mdash;')  + '<br/>');
+                                                                                              $popupContent.append('<b>' + gettext('Last Login') + ': </b>' + (feature.properties.last_login ? feature.properties.last_login : '&mdash;')  + '<br/>');
+                                                                                              //$popupContent.append('<b>' + gettext('Alarms') + ': </b>' + feature.attributes.warnings + '<br/>');
+                                                                                              
+                                                                                              layer.bindPopup($popupContent.html());
+                                                                              }
+                                                               }).addTo(map);
+                                                               
+                                                               map.fitBounds(geojsonLayer.getBounds());
+                                                               map.zoomOut();
+                                               }
+                                               
+                                               var buildRoutes = function(segments) {
+                                                               //
+                                                               
+                                               }
+                                               
+                                               // show map
+                                               var map = L.map('map', {
+                                                               layers: MQ.mapLayer(),
+                                                               center: [ 0,0 ],
+                                                               zoom: 2
+                                               });
+                                               
+                                               // get sites and display
+                                               var ajaxSites = $.getJSON( $('#map').data('site-source-url'), function( data ) {
+                                                               drawSites(map, data);
+                                               });
+                                               
+                                               // get segments ahead and display
+                                               var ajaxSegments = $.getJSON( $('#map').data('segment-source-url'), function( data ) {
+                                                               var geojsonLayer = L.geoJSON(data, {
+                                                                              //style: myStyle
+                                                               }).addTo(map);
+                                               });
+                                               // get segments back
+                                               var ajaxSegmentsBack = $.getJSON( $('#map').data('segment-source-url'), {'reverse': 1});
+                                               
+                                               // wait for all requests to be finished in order to build the routes
+                                               $.when(ajaxSites, ajaxSegments, ajaxSegmentsBack).done(function(sitesResult, segmentsResult, segmentsBackResult) {
+                                                               var sites = sitesResult[0];
+                                                               var segments = segmentsResult[0];
+                                                               var segmentsBack = segmentsBackResult[0];
+                                                               
+                                                               
+                                               });
+                                               
+                               });
+                               </script>
+                {% endaddtoblock %}    
+{% endblock %}
+
+
+{% block content-spaced %}
+                <h1>{{ object.name }}</h1>
+
+                <div style="height:600px" id="map" 
+                               data-site-source-url="{% url 'api-routes:route-sites-list' object.pk %}"
+                               data-segment-source-url="{% url 'api-routes:route-segments-list' object.pk %}">
+                </div>
+
+{% endblock %}

@@ -1,0 +1,190 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-box/app-box.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="my-icons.html">
+<link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
+
+
+<dom-module id="my-app">
+  <template>
+    <style include="app-grid-style">
+      :host {
+
+        display: block;
+      }
+
+
+      
+
+
+      .lol {
+        --app-grid-expandible-item-columns-self: 2;
+      }
+      
+      .test {
+        --test: left;
+        
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+        --app-grid-columns: 4;
+        --app-grid-item-height: 100px;
+        --app-grid-gutter: 20px;
+        
+        --app-grid-expandible-item1: {
+          -webkit-flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns-self, 1) - var(--app-grid-gutter, 0px)) !important;
+          flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns-self, 1) - var(--app-grid-gutter, 0px)) !important;
+          max-width: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns-self, 1) - var(--app-grid-gutter, 0px)) !important;
+        };
+
+      
+      }
+      
+      /* Only the first item should expand */
+      .item:nth-child(2) {
+        --app-grid-expandible-item-columns-self: 3;
+        @apply(--app-grid-expandible-item1);
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
+
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+    
+	    ul {
+	      padding: 0;
+	      list-style: none;
+	    }
+
+	    .item {
+	      background-color: white;
+      }
+      
+
+	    
+
+       
+      
+    </style>
+
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+      <app-header-layout>
+        <app-header condenses reveals effects="waterfall">
+          <app-toolbar>
+            <div spacer main-title>Flickr grid layout</div>
+          </app-toolbar>
+        </app-header>
+        <div class="centered-container lol">
+			    <ul class="app-grid test">
+				    <li class="item">
+				      <div class="">item 1</div>
+				    </li>
+				    <li class="item">
+				      <div>item 2</div>
+				    </li>
+				    <li class="item">
+				      <div>item 3</div>
+				    </li>
+				    
+				    <li class="item">
+				      <div>item 4</div>
+				    </li>
+				    <li class="item">
+				      <div>item 5</div>
+				    </li>
+				    <li class="item">
+				      <div>item 6</div>
+				    </li>
+				    
+			    </ul>
+        </div>
+      </app-header-layout>
+
+
+
+  </template>
+
+  <script>
+    class MyApp extends Polymer.Element {
+
+      static get is() { return 'my-app'; }
+
+      static get properties() {
+        return {
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+        };
+      }
+
+      static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }
+
+      _routePageChanged(page) {
+        // Polymer 2.0 will call with `undefined` on initialization.
+        // Ignore until we are properly called with a string.
+        if (page === undefined) {
+          return;
+        }
+
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
+        // Close a non-persistent drawer when the page & route are changed.
+//         if (!this.$.drawer.persistent) {
+//           this.$.drawer.close();
+//         }
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(MyApp.is, MyApp);
+  </script>
+</dom-module>
